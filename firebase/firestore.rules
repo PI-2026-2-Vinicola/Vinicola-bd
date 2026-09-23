@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function role() { return request.auth.token.role; }
+    function isAdmin() { return signedIn() && role() == 'admin'; }
+
+    // Biblioteca de variedades: pública para leitura
+    match /varieties/{varietyId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Sensores: leitura autenticada; escrita pelo backend (Admin SDK ignora as regras) ou administrador
+    match /sensors/{sensorId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+      match /telemetry/{entry} {
+        allow read: if signedIn() && role() in ['admin', 'gestor'];
+        allow write: if false;
+      }
+    }
+
+    // Leituras (resultado da IA): somente o backend grava
+    match /readings/{code} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Perfis de usuário
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+  }
+}
