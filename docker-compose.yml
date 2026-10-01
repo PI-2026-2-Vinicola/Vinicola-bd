@@ -1,17 +1,18 @@
-# Bancos de dados da OSAIS para desenvolvimento.
-#   docker compose up -d postgres      # PostgreSQL :5432 (esquema + visões + dados iniciais)
-#   docker compose up -d mysql         # MySQL      :3306
-#   docker compose up -d adminer       # interface web :8080
+# Bancos de dados da OASIS para desenvolvimento.
+#   cp .env.example .env                 # defina as senhas
+#   docker compose up -d postgres        # PostgreSQL 127.0.0.1:5432 (esquema + visões + catálogo)
+#   docker compose up -d mysql           # MySQL      127.0.0.1:3306
+#   docker compose up -d adminer         # interface web 127.0.0.1:8080
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: osais
-      POSTGRES_USER: osais
-      POSTGRES_PASSWORD: osais
+      POSTGRES_DB: oasis
+      POSTGRES_USER: oasis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       TZ: America/Recife
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres:/docker-entrypoint-initdb.d:ro
@@ -19,12 +20,12 @@ services:
   mysql:
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: osais
-      MYSQL_USER: osais
-      MYSQL_PASSWORD: osais
-      MYSQL_ROOT_PASSWORD: osais-root
+      MYSQL_DATABASE: oasis
+      MYSQL_USER: oasis
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysqldata:/var/lib/mysql
       - ./mysql:/docker-entrypoint-initdb.d:ro
@@ -32,7 +33,7 @@ services:
   adminer:
     image: adminer
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
 volumes:
   pgdata:

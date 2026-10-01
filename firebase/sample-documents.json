@@ -1,4 +1,5 @@
 {
+  "_comentario": "Exemplos de FORMATO dos documentos (valores ilustrativos). A API atual usa banco relacional; esta estrutura é a alternativa NoSQL equivalente.",
   "varieties/cabernet-sauvignon": {
     "name": "Cabernet Sauvignon",
     "type": "Tinta",
@@ -7,50 +8,111 @@
     "origin": "Bordeaux, França"
   },
   "sensors/S-001": {
-    "name": "OSAIS Cam 01",
-    "block": "Bloco A",
-    "location": "Bloco A — Fileira 12",
-    "geo": { "__type": "GeoPoint", "latitude": -8.99375, "longitude": -40.27552 },
-    "varietyId": "cabernet-sauvignon",
+    "name": "Câmera Talhão 1",
+    "block": "Bloco 1",
+    "location": "Fileira 4",
+    "geo": {
+      "__type": "GeoPoint",
+      "latitude": -9.0,
+      "longitude": -40.0
+    },
+    "varietyId": "syrah",
     "device": "ESP32-CAM (OV2640)",
-    "firmware": "v1.4.2",
-    "battery": 92,
-    "signal": -58,
+    "firmware": "v2.0.0",
+    "battery": 88,
+    "signal": -61,
     "captureIntervalMin": 90,
-    "status": "online",
-    "installedAt": "2026-03-02",
-    "lastCommunication": { "__type": "Timestamp", "value": "2026-09-23T13:28:00Z" }
+    "active": true,
+    "installedAt": "2026-03-10",
+    "lastCommunication": {
+      "__type": "Timestamp",
+      "value": "2026-09-23T13:28:00Z"
+    },
+    "deviceTokenHash": "sha256$…"
   },
-  "sensors/S-001/telemetry/aX81kd": {
-    "receivedAt": { "__type": "Timestamp", "value": "2026-09-23T13:28:00Z" },
-    "battery": 92,
-    "signal": -58,
-    "firmware": "v1.4.2"
+  "sensors/S-001/telemetry/{autoId}": {
+    "receivedAt": {
+      "__type": "Timestamp",
+      "value": "2026-09-23T13:28:00Z"
+    },
+    "battery": 88,
+    "signal": -61,
+    "firmware": "v2.0.0"
   },
-  "readings/OS-01424": {
+  "sensors/S-001/environment/{autoId}": {
+    "measuredAt": {
+      "__type": "Timestamp",
+      "value": "2026-09-23T13:28:00Z"
+    },
+    "temperatureC": 29.4,
+    "humidityPct": 52.0,
+    "luminosityLux": null,
+    "soilMoisturePct": null,
+    "source": "sensor"
+  },
+  "readings/OA-00001": {
     "sensorId": "S-001",
-    "block": "Bloco A",
-    "location": "Bloco A — Fileira 12",
-    "capturedAt": { "__type": "Timestamp", "value": "2026-09-23T13:30:00Z" },
-    "varietyId": "cabernet-sauvignon",
+    "block": "Bloco 1",
+    "location": "Fileira 4",
+    "capturedAt": {
+      "__type": "Timestamp",
+      "value": "2026-09-23T13:30:00Z"
+    },
+    "varietyId": "syrah",
     "quality": "boa",
-    "confidence": 0.94,
+    "confidence": 0.84,
     "maturation": "adequada",
     "visualCondition": "Boa",
     "classification": "APROVADA",
-    "observations": "Cacho uniforme, coloração compatível com a variedade e sem sinais visuais de dano.",
+    "observations": "Bagas íntegras e maturação homogênea no cacho.",
     "clustersDetected": 1,
     "detections": [
-      { "kind": "cacho", "label": "cabernet_sauvignon", "confidence": 0.94, "box": [0.31, 0.15, 0.37, 0.64] }
+      {
+        "kind": "cacho",
+        "label": "syrah",
+        "confidence": 0.84,
+        "box": [
+          0.31,
+          0.15,
+          0.37,
+          0.64
+        ]
+      }
     ],
-    "imagePath": "images/2026/09/23/OS-01424.jpg",
-    "modelVersion": "YOLOv8n-osais v0.3",
-    "processingMs": 312,
-    "stage": "concluida"
+    "imagePath": "images/2026/09/23/3f2a….jpg",
+    "thumbPath": "images/2026/09/23/3f2a…_thumb.jpg",
+    "source": "sensor",
+    "modelVersion": "OASIS análise de cor v1",
+    "processingMs": 212,
+    "stage": "concluida",
+    "createdBy": null
   },
-  "users/Qm3xY7b2rTcP": {
-    "name": "Carlos Menezes",
-    "email": "gestor@osais.agr.br",
-    "role": "gestor"
+  "imports/{autoId}": {
+    "kind": "readings",
+    "filename": "historico-2025.csv",
+    "status": "parcial",
+    "totalRows": 1200,
+    "inserted": 1187,
+    "updated": 0,
+    "duplicates": 10,
+    "invalid": 3,
+    "errors": [
+      {
+        "row": 57,
+        "field": "quality",
+        "message": "qualidade “otima” inválida"
+      }
+    ],
+    "createdBy": "{uid}",
+    "createdAt": {
+      "__type": "Timestamp",
+      "value": "2026-09-23T14:00:00Z"
+    }
+  },
+  "users/{uid}": {
+    "name": "Nome do usuário",
+    "email": "usuario@empresa.com",
+    "role": "gestor",
+    "isActive": true
   }
 }

@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() { return request.auth != null; }
+    function signedIn() { return request.auth != null && request.auth.token.active != false; }
     function role() { return request.auth.token.role; }
     function isAdmin() { return signedIn() && role() == 'admin'; }
 
@@ -17,7 +17,11 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if isAdmin();
       match /telemetry/{entry} {
-        allow read: if signedIn() && role() in ['admin', 'gestor'];
+        allow read: if signedIn();
+        allow write: if false;
+      }
+      match /environment/{entry} {
+        allow read: if signedIn();
         allow write: if false;
       }
     }
@@ -25,6 +29,12 @@ service cloud.firestore {
     // Leituras (resultado da IA): somente o backend grava
     match /readings/{code} {
       allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Importações: consulta por administradores e gestores; gravação pelo backend
+    match /imports/{jobId} {
+      allow read: if signedIn() && role() in ['admin', 'gestor'];
       allow write: if false;
     }
 
