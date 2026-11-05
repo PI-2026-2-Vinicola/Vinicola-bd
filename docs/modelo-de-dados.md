@@ -163,7 +163,7 @@ erDiagram
 | `clusters_detected` | inteiro | Cachos encontrados |
 | `image_path` / `thumb_path` | texto | Imagem processada (máx. 1600 px, sem EXIF) e miniatura (360 px) |
 | `source` | `sensor` · `upload` · `importacao` · `demonstracao` | Origem do dado |
-| `model_version` | texto | Detector que gerou o resultado (“OASIS análise de cor v1”, “YOLO · arquivo.pt”, “Importado”…) |
+| `model_version` | texto | Detector que gerou o resultado (“YOLO cachos · OASIS Cachos 1.0.0 + OASIS análise de cor v1”, “OASIS análise de cor v1”, “YOLO · arquivo.pt”, “Importado”…) |
 | `processing_ms` | inteiro | Tempo de processamento na API |
 | `created_by` | FK → `users` | Usuário que enviou ou importou (nulo para dispositivos) |
 
@@ -173,9 +173,11 @@ Coordenadas **normalizadas** (0–1): `x`, `y` = canto superior esquerdo; `w`, `
 
 | Tipo | Classes |
 | --- | --- |
-| Cacho (variedade) | `cabernet_sauvignon`, `syrah`, `tempranillo`, `touriga_nacional`, `chenin_blanc`, `moscato_canelli` |
+| Cacho (variedade) | `cabernet_sauvignon`, `syrah`, `tempranillo`, `touriga_nacional`, `chenin_blanc`, `moscato_canelli` — ou `cacho`, quando a variedade não é conhecida |
 | Anomalia leve (Atenção) | `maturacao_desigual`, `baga_irregular`, `mancha_leve` |
 | Anomalia grave (Necessita atenção) | `podridao`, `baga_murcha`, `lesao` |
+
+Com o modelo publicado na API (YOLO treinado com fotos reais do Embrapa WGISD), as caixas de `kind = 'cacho'` são **previsões do modelo** e recebem a classe da variedade cadastrada no talhão (o modelo localiza o cacho, mas não identifica a variedade); as de `kind = 'anomalia'` vêm da análise de cor feita dentro de cada cacho. `confidence` é a probabilidade estimada pelo modelo para os cachos e um índice da regra (fração da área do cacho) para as anomalias. A origem de cada leitura fica em `readings.model_version`. Nenhuma coluna nova foi necessária.
 
 ### `environment_readings` — medições ambientais
 
