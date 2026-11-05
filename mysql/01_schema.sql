@@ -74,6 +74,8 @@ CREATE TABLE IF NOT EXISTS readings (
     thumb_path         VARCHAR(255) NULL,
     source             VARCHAR(20) NOT NULL DEFAULT 'sensor',
     model_version      VARCHAR(80) NOT NULL,
+    predicted_variety  VARCHAR(40),                         -- variedade prevista pela foto (classificador YOLO de variedades)
+    variety_confidence DOUBLE,                         -- probabilidade da previsão (0–1)
     processing_ms      INT         NOT NULL DEFAULT 0,
     stage              VARCHAR(12) NOT NULL DEFAULT 'concluida',
     created_by         INT         NULL,

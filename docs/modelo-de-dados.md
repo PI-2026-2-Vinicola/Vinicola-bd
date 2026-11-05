@@ -73,6 +73,8 @@ erDiagram
         varchar thumb_path
         varchar source "sensor | upload | importacao | demonstracao"
         varchar model_version
+        varchar predicted_variety "variedade prevista pela foto"
+        float variety_confidence "0–1"
         int processing_ms
         varchar stage
         int created_by FK
@@ -164,6 +166,8 @@ erDiagram
 | `image_path` / `thumb_path` | texto | Imagem processada (máx. 1600 px, sem EXIF) e miniatura (360 px) |
 | `source` | `sensor` · `upload` · `importacao` · `demonstracao` | Origem do dado |
 | `model_version` | texto | Detector que gerou o resultado (“YOLO cachos · OASIS Cachos 1.0.0 + OASIS análise de cor v1”, “OASIS análise de cor v1”, “YOLO · arquivo.pt”, “Importado”…) |
+| `predicted_variety` | texto (opcional) | Variedade prevista **pela foto** pelo classificador YOLO de variedades (`cabernet_franc`, `cabernet_sauvignon`, `chardonnay`, `sauvignon_blanc`, `syrah`). É uma previsão para comparação: a variedade oficial da leitura continua sendo `variety_id`, a do talhão. Vazio quando não há classificador ou nenhum cacho grande o bastante. |
+| `variety_confidence` | 0–1 (opcional) | Probabilidade da variedade prevista (média dos cachos, ponderada pela confiança da detecção) |
 | `processing_ms` | inteiro | Tempo de processamento na API |
 | `created_by` | FK → `users` | Usuário que enviou ou importou (nulo para dispositivos) |
 

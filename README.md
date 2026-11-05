@@ -19,7 +19,8 @@ postgres/
 ├── 01_schema.sql      # tabelas, restrições e índices
 ├── 02_views.sql       # visões analíticas (status dos sensores, histórico, alertas, ambiente)
 ├── 03_seed.sql        # catálogo de variedades (único dado inicial)
-└── 04_demo_data.sql   # funções OPCIONAIS oasis_generate_demo() / oasis_clear_demo()
+├── 04_demo_data.sql   # funções OPCIONAIS oasis_generate_demo() / oasis_clear_demo()
+└── 05_variedade_prevista.sql  # migração: colunas da variedade prevista pela foto (bancos já existentes)
 mysql/                 # equivalentes para MySQL/MariaDB (01–03)
 firebase/              # proposta de coleções, regras e índices
 consultas/             # consultas que respondem às perguntas-chave da plataforma
