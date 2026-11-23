@@ -2,12 +2,12 @@
 
 **Observação Agroambiental Sensorizada, Inteligente e Sustentável**
 
-Modelo de dados da OASIS, a camada de **aquisição e geração de dados de origem** do Projeto Integrador **“Inteligência de Dados no Vale do São Francisco”**. Guarda sensores, imagens analisadas, detecções, medições ambientais, importações e auditoria.
+Modelo de dados da OASIS, a camada de **aquisição e geração de dados de origem** do Projeto Integrador **“Inteligência de Dados no Vale do São Francisco”**. Guarda exportadoras (organizações), usuários e perfis, clientes internacionais (com os dados sensíveis cifrados), sensores, imagens analisadas, detecções, medições ambientais, importações e auditoria.
 
 | Opção | Pasta | Validação |
 | --- | --- | --- |
 | **PostgreSQL** (recomendado) | [`postgres/`](postgres) | PostgreSQL 16 — scripts aplicados e suíte de testes da API executada sobre o banco criado |
-| **MySQL / MariaDB** | [`mysql/`](mysql) | MariaDB 10.11 — idem (MySQL 8.0.16 ou mais recente) |
+| **MySQL / MariaDB** | [`mysql/`](mysql) | MySQL 8.4 e MariaDB 10.11 — idem (MySQL 8.0.19 ou mais recente) |
 | **Firebase** (Firestore + Storage) | [`firebase/`](firebase) | Apenas proposta de estrutura; a API atual não usa Firebase |
 
 O esquema espelha os modelos da API ([`Vinicola-back/app/models.py`](https://github.com/PI-2026-2-Vinicola/Vinicola-back)): a API funciona tanto com um banco criado por estes scripts quanto criando as tabelas sozinha.
@@ -20,12 +20,15 @@ postgres/
 ├── 02_views.sql       # visões analíticas (status dos sensores, histórico, alertas, ambiente)
 ├── 03_seed.sql        # catálogo de variedades (único dado inicial)
 ├── 04_demo_data.sql   # funções OPCIONAIS oasis_generate_demo() / oasis_clear_demo()
-└── 05_variedade_prevista.sql  # migração: colunas da variedade prevista pela foto (bancos já existentes)
-mysql/                 # equivalentes para MySQL/MariaDB (01–03)
+├── 05_variedade_prevista.sql  # migração: colunas da variedade prevista pela foto (bancos já existentes)
+└── 06_seguranca.sql   # migração: organizações, clientes internacionais e perfil cliente (bancos já existentes)
+mysql/                 # equivalentes para MySQL/MariaDB (01–03, 05 e 06)
 firebase/              # proposta de coleções, regras e índices
 consultas/             # consultas que respondem às perguntas-chave da plataforma
 docs/modelo-de-dados.md  # diagrama ER, dicionário de dados, visões e índices
 ```
+
+As migrações (05 e 06) são idempotentes: num banco novo não alteram nada, e num banco antigo acrescentam o que falta e colocam os dados existentes numa organização padrão. Também podem ser dispensadas, porque a API faz as mesmas alterações ao iniciar.
 
 Nenhum usuário, sensor ou leitura é criado pelos scripts. O primeiro administrador é criado pela API na primeira inicialização (`OASIS_ADMIN_EMAIL` / `OASIS_ADMIN_PASSWORD`); sensores são cadastrados no painel ou importados; leituras vêm dos dispositivos, de envios manuais ou de importação de arquivos.
 
@@ -78,5 +81,7 @@ Na API, o equivalente é `python -m app.cli seed-demo` / `clear-demo` (funciona 
 | Como os resultados estão evoluindo? | `v_quality_by_day` |
 | Como está o clima do talhão? | `v_environment_daily` |
 | O que foi importado e por quem? | `v_import_jobs` |
+| Quem tentou acessar o que não podia? | `audit_log` (`action = 'acesso_negado'`) |
+| As senhas e os dados dos clientes estão protegidos? | `users.password_hash`, `international_clients.*_enc` (consultas em `consultas/`) |
 
 Detalhes em [`docs/modelo-de-dados.md`](docs/modelo-de-dados.md).
