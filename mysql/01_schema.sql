@@ -7,6 +7,34 @@
 
 SET NAMES utf8mb4;
 
+CREATE TABLE IF NOT EXISTS organizations (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    name        VARCHAR(120) NOT NULL,
+    city        VARCHAR(80)  NULL,
+    active      BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    UNIQUE KEY ix_organizations_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Exportadoras: base do isolamento de dados';
+
+CREATE TABLE IF NOT EXISTS international_clients (
+    id                    INT AUTO_INCREMENT PRIMARY KEY,
+    organization_id       INT          NOT NULL,
+    company_name          VARCHAR(120) NOT NULL,
+    country               VARCHAR(60)  NOT NULL,
+    contact_name_enc      TEXT         NULL,
+    email_enc             TEXT         NULL,
+    phone_enc             TEXT         NULL,
+    tax_id_enc            TEXT         NULL,
+    commercial_terms_enc  TEXT         NULL,
+    active                BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_by            INT          NULL,
+    created_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    UNIQUE KEY uq_clients_org_company (organization_id, company_name),
+    KEY ix_international_clients_organization_id (organization_id),
+    CONSTRAINT fk_clients_organization FOREIGN KEY (organization_id) REFERENCES organizations (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Clientes internacionais; campos *_enc cifrados pela API (AES-256-GCM)';
+
 CREATE TABLE IF NOT EXISTS users (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(120) NOT NULL,
@@ -16,8 +44,13 @@ CREATE TABLE IF NOT EXISTS users (
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     last_login_at   DATETIME(6)  NULL,
+    organization_id INT          NULL,
+    client_id       INT          NULL,
     UNIQUE KEY ix_users_email (email),
-    CONSTRAINT ck_users_role CHECK (role IN ('admin','gestor','operador'))
+    KEY ix_users_organization_id (organization_id),
+    CONSTRAINT fk_users_organization FOREIGN KEY (organization_id) REFERENCES organizations (id),
+    CONSTRAINT fk_users_client FOREIGN KEY (client_id) REFERENCES international_clients (id) ON DELETE SET NULL,
+    CONSTRAINT ck_users_role CHECK (role IN ('admin','gestor','operador','cliente'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Usuários da plataforma OASIS';
 
 CREATE TABLE IF NOT EXISTS varieties (
@@ -48,8 +81,11 @@ CREATE TABLE IF NOT EXISTS sensors (
     installed_at          DATE         NULL,
     last_communication    DATETIME(6)  NULL,
     device_token_hash     VARCHAR(255) NULL,
+    organization_id       INT          NULL,
     created_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    KEY ix_sensors_organization_id (organization_id),
     CONSTRAINT fk_sensors_variety FOREIGN KEY (variety_id) REFERENCES varieties (id),
+    CONSTRAINT fk_sensors_organization FOREIGN KEY (organization_id) REFERENCES organizations (id),
     CONSTRAINT ck_sensors_battery  CHECK (battery IS NULL OR battery BETWEEN 0 AND 100),
     CONSTRAINT ck_sensors_lat      CHECK (latitude  IS NULL OR latitude  BETWEEN -90  AND 90),
     CONSTRAINT ck_sensors_lng      CHECK (longitude IS NULL OR longitude BETWEEN -180 AND 180),
@@ -153,8 +189,10 @@ CREATE TABLE IF NOT EXISTS import_jobs (
     invalid      INT          NOT NULL DEFAULT 0,
     errors_json  TEXT         NOT NULL,
     created_by   INT          NULL,
+    organization_id INT       NULL,
     created_at   DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     CONSTRAINT fk_import_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+    CONSTRAINT fk_import_organization FOREIGN KEY (organization_id) REFERENCES organizations (id),
     CONSTRAINT ck_import_kind   CHECK (kind IN ('readings','sensors','environment')),
     CONSTRAINT ck_import_status CHECK (status IN ('concluida','parcial','sem_alteracoes','falhou'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Registro das importações de arquivos';

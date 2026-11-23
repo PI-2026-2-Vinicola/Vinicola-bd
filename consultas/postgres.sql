@@ -60,3 +60,23 @@ SELECT id, created_at, created_by_name, kind, filename, status, inserted, update
 
 -- Exportação para Data Science (CSV) — execute no psql:
 -- \copy (SELECT * FROM v_readings WHERE source <> 'demonstracao' ORDER BY captured_at) TO 'oasis_readings.csv' WITH CSV HEADER
+
+-- ---------------------------------------------------------------- segurança da informação
+-- Senhas: só o hash PBKDF2 (formato pbkdf2_sha256$iterações$sal$hash), nunca o texto
+SELECT email, role, organization_id, password_hash FROM users ORDER BY id;
+
+-- Dados sensíveis dos clientes internacionais: só o valor cifrado (enc:v1:...)
+SELECT id, organization_id, company_name, country, email_enc, tax_id_enc FROM international_clients ORDER BY id;
+
+-- Acessos negados (perfil sem permissão ou registro de outra organização)
+SELECT created_at, actor, target, details, ip FROM audit_log WHERE action = 'acesso_negado' ORDER BY created_at DESC LIMIT 20;
+
+-- Quem consultou os dados decifrados de clientes
+SELECT created_at, actor, target, ip FROM audit_log WHERE action = 'dados_sensiveis_consultados' ORDER BY created_at DESC LIMIT 20;
+
+-- Usuários e sensores por exportadora
+SELECT o.name AS exportadora,
+       (SELECT COUNT(*) FROM users u WHERE u.organization_id = o.id) AS usuarios,
+       (SELECT COUNT(*) FROM sensors s WHERE s.organization_id = o.id) AS sensores,
+       (SELECT COUNT(*) FROM international_clients c WHERE c.organization_id = o.id) AS clientes
+  FROM organizations o ORDER BY o.name;
