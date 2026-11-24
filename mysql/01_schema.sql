@@ -16,25 +16,6 @@ CREATE TABLE IF NOT EXISTS organizations (
     UNIQUE KEY ix_organizations_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Exportadoras: base do isolamento de dados';
 
-CREATE TABLE IF NOT EXISTS international_clients (
-    id                    INT AUTO_INCREMENT PRIMARY KEY,
-    organization_id       INT          NOT NULL,
-    company_name          VARCHAR(120) NOT NULL,
-    country               VARCHAR(60)  NOT NULL,
-    contact_name_enc      TEXT         NULL,
-    email_enc             TEXT         NULL,
-    phone_enc             TEXT         NULL,
-    tax_id_enc            TEXT         NULL,
-    commercial_terms_enc  TEXT         NULL,
-    active                BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_by            INT          NULL,
-    created_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    updated_at            DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UNIQUE KEY uq_clients_org_company (organization_id, company_name),
-    KEY ix_international_clients_organization_id (organization_id),
-    CONSTRAINT fk_clients_organization FOREIGN KEY (organization_id) REFERENCES organizations (id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Clientes internacionais; campos *_enc cifrados pela API (AES-256-GCM)';
-
 CREATE TABLE IF NOT EXISTS users (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(120) NOT NULL,
@@ -45,12 +26,10 @@ CREATE TABLE IF NOT EXISTS users (
     created_at      DATETIME(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     last_login_at   DATETIME(6)  NULL,
     organization_id INT          NULL,
-    client_id       INT          NULL,
     UNIQUE KEY ix_users_email (email),
     KEY ix_users_organization_id (organization_id),
     CONSTRAINT fk_users_organization FOREIGN KEY (organization_id) REFERENCES organizations (id),
-    CONSTRAINT fk_users_client FOREIGN KEY (client_id) REFERENCES international_clients (id) ON DELETE SET NULL,
-    CONSTRAINT ck_users_role CHECK (role IN ('admin','gestor','operador','cliente'))
+    CONSTRAINT ck_users_role CHECK (role IN ('admin','gestor','operador'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Usuários da plataforma OASIS';
 
 CREATE TABLE IF NOT EXISTS varieties (
