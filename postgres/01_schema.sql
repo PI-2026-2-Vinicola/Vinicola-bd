@@ -8,7 +8,7 @@
 
 BEGIN;
 
--- Organizações (exportadoras): cada uma só acessa os próprios sensores, leituras, importações e clientes
+-- Organizações (exportadoras): cada uma só acessa os próprios sensores, leituras e importações
 CREATE TABLE IF NOT EXISTS organizations (
     id          SERIAL PRIMARY KEY,
     name        VARCHAR(120) NOT NULL,
@@ -18,27 +18,6 @@ CREATE TABLE IF NOT EXISTS organizations (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ix_organizations_name ON organizations (name);
 COMMENT ON TABLE organizations IS 'Exportadoras (multi-organização): base do isolamento de dados entre empresas';
-
--- Clientes internacionais (importadores). Os campos *_enc guardam só o valor cifrado pela API
--- (AES-256-GCM, formato enc:v1:<id da chave>:<nonce>:<cifra+tag>); a chave nunca fica no banco.
-CREATE TABLE IF NOT EXISTS international_clients (
-    id                    SERIAL PRIMARY KEY,
-    organization_id       INTEGER      NOT NULL REFERENCES organizations (id),
-    company_name          VARCHAR(120) NOT NULL,
-    country               VARCHAR(60)  NOT NULL,
-    contact_name_enc      TEXT,                           -- dado pessoal (cifrado)
-    email_enc             TEXT,                           -- dado pessoal (cifrado)
-    phone_enc             TEXT,                           -- dado pessoal (cifrado)
-    tax_id_enc            TEXT,                           -- identificação fiscal (cifrado)
-    commercial_terms_enc  TEXT,                           -- segredo comercial: volume, preço, Incoterm (cifrado)
-    active                BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_by            INTEGER,
-    created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    CONSTRAINT uq_clients_org_company UNIQUE (organization_id, company_name)
-);
-CREATE INDEX IF NOT EXISTS ix_international_clients_organization_id ON international_clients (organization_id);
-COMMENT ON TABLE international_clients IS 'Clientes internacionais; dados pessoais e comerciais cifrados pela aplicação';
 
 -- Usuários da plataforma e perfis de acesso
 CREATE TABLE IF NOT EXISTS users (
@@ -51,13 +30,12 @@ CREATE TABLE IF NOT EXISTS users (
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT now(),
     last_login_at   TIMESTAMPTZ,
     organization_id INTEGER      REFERENCES organizations (id),          -- vazio só para o administrador
-    client_id       INTEGER      REFERENCES international_clients (id) ON DELETE SET NULL,  -- perfil cliente
-    CONSTRAINT ck_users_role CHECK (role IN ('admin','gestor','operador','cliente'))
+    CONSTRAINT ck_users_role CHECK (role IN ('admin','gestor','operador'))
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email ON users (email);
 CREATE INDEX IF NOT EXISTS ix_users_organization_id ON users (organization_id);
 COMMENT ON TABLE  users      IS 'Usuários da plataforma OASIS';
-COMMENT ON COLUMN users.role IS 'admin = todas as organizações · gestor = exportadora (sensores, clientes, importação) · operador = campo e logística (fotos e medições) · cliente = cliente internacional (só leitura)';
+COMMENT ON COLUMN users.role IS 'admin = todas as organizações · gestor = exportadora (sensores, análises, importação) · operador = campo e logística (fotos e medições)';
 
 -- Variedades de uva (catálogo de referência)
 CREATE TABLE IF NOT EXISTS varieties (

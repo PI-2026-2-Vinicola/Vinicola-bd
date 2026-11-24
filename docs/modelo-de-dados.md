@@ -20,9 +20,7 @@ erDiagram
     USERS     ||--o{ IMPORT_JOBS : "executou"
     ORGANIZATIONS ||--o{ USERS : "emprega"
     ORGANIZATIONS ||--o{ SENSORS : "possui"
-    ORGANIZATIONS ||--o{ INTERNATIONAL_CLIENTS : "atende"
     ORGANIZATIONS ||--o{ IMPORT_JOBS : "recebe"
-    INTERNATIONAL_CLIENTS ||--o{ USERS : "acessa como cliente"
 
     ORGANIZATIONS {
         int id PK
@@ -31,33 +29,16 @@ erDiagram
         boolean active
         timestamptz created_at
     }
-    INTERNATIONAL_CLIENTS {
-        int id PK
-        int organization_id FK
-        varchar company_name "em claro"
-        varchar country "em claro"
-        text contact_name_enc "AES-256-GCM"
-        text email_enc "AES-256-GCM"
-        text phone_enc "AES-256-GCM"
-        text tax_id_enc "AES-256-GCM"
-        text commercial_terms_enc "AES-256-GCM"
-        boolean active
-        int created_by
-        timestamptz created_at
-        timestamptz updated_at
-    }
-
     USERS {
         int id PK
         varchar name
         varchar email UK
         varchar password_hash
-        varchar role "admin | gestor | operador | cliente"
+        varchar role "admin | gestor | operador"
         boolean is_active
         timestamptz created_at
         timestamptz last_login_at
         int organization_id FK "vazio só para admin"
-        int client_id FK "perfil cliente"
     }
     VARIETIES {
         varchar id PK "ex.: cabernet-sauvignon"
@@ -170,24 +151,13 @@ erDiagram
 
 ### `organizations` e perfis — isolamento entre exportadoras
 
-Cada exportadora é uma organização. Usuários (exceto o administrador), sensores, importações e clientes internacionais pertencem a uma organização; leituras e medições herdam a organização do sensor. A API filtra toda consulta pela organização do usuário e responde 403 a um registro de outra (matriz completa em [`Vinicola-back/docs/seguranca.md`](https://github.com/PI-2026-2-Vinicola/Vinicola-back/blob/main/docs/seguranca.md)).
+Cada exportadora é uma organização. Usuários (exceto o administrador), sensores e importações pertencem a uma organização; leituras e medições herdam a organização do sensor. A API filtra toda consulta pela organização do usuário e responde 403 a um registro de outra (matriz completa em [`Vinicola-back/docs/seguranca.md`](https://github.com/PI-2026-2-Vinicola/Vinicola-back/blob/main/docs/seguranca.md)).
 
 | Perfil (`users.role`) | Organização | Acesso |
 | --- | --- | --- |
 | `admin` | vazia | Todas as organizações, usuários, auditoria e sistema |
-| `gestor` | obrigatória | Sensores, análises, clima, importação e clientes da própria exportadora |
-| `operador` | obrigatória | Envio de fotos e medições e consulta da própria exportadora; sem dados comerciais |
-| `cliente` | obrigatória + `client_id` | Só leitura dos indicadores da exportadora que o atende e do próprio cadastro |
-
-### `international_clients` — clientes internacionais (dados sensíveis)
-
-| Coluna | Descrição |
-| --- | --- |
-| `company_name`, `country` | Em claro: usados em listagens e busca, não identificam pessoas. Únicos por organização. |
-| `contact_name_enc`, `email_enc`, `phone_enc`, `tax_id_enc` | Dados pessoais, cifrados pela API com AES-256-GCM antes de gravar. |
-| `commercial_terms_enc` | Segredo comercial (volume, preço, Incoterm, pagamento), cifrado. |
-
-Formato dos campos cifrados: `enc:v1:<id da chave>:<nonce>:<cifra+tag>`. A chave (`DATA_ENCRYPTION_KEY`) fica só na variável de ambiente da API, nunca no banco: quem tiver acesso apenas ao banco ou ao backup não lê esses campos. O contexto da cifra inclui a organização e o campo, então um valor copiado para outro registro não decifra.
+| `gestor` | obrigatória | Sensores, análises, clima e importação da própria exportadora |
+| `operador` | obrigatória | Envio de fotos e medições e consulta da própria exportadora |
 
 ### `sensors` — dispositivos
 
@@ -242,7 +212,7 @@ Temperatura (−20 a 60 °C), umidade do ar (0–100 %), luminosidade (0–200 0
 
 ### `import_jobs` e `audit_log`
 
-`import_jobs` registra cada importação (inclusive as que falharam) com contagens e os erros por linha em JSON. `audit_log` registra logins (inclusive falhos e bloqueados), acessos negados pela matriz de permissões ou pelo isolamento entre organizações (`acesso_negado`), consultas aos dados decifrados de clientes (`dados_sensiveis_consultados`), criação e alteração de usuários, organizações, clientes e sensores, geração de tokens, importações e exclusões, com o IP de origem.
+`import_jobs` registra cada importação (inclusive as que falharam) com contagens e os erros por linha em JSON. `audit_log` registra logins (inclusive falhos e bloqueados), acessos negados pela matriz de permissões ou pelo isolamento entre organizações (`acesso_negado`), criação e alteração de usuários, organizações e sensores, geração de tokens, importações e exclusões, com o IP de origem.
 
 ## Visões
 
@@ -269,7 +239,6 @@ Temperatura (−20 a 60 °C), umidade do ar (0–100 %), luminosidade (0–200 0
 ## Segurança da informação e LGPD
 
 - Senhas guardadas com **PBKDF2-SHA256** (240 mil iterações); tokens de dispositivo, que são aleatórios de 192 bits, com **SHA-256**. Nenhum segredo é armazenado em texto.
-- Dados pessoais e comerciais dos clientes internacionais cifrados por campo (AES-256-GCM) pela API; a chave não fica no banco.
-- Isolamento por organização: `organization_id` em usuários, sensores, importações e clientes.
+- Isolamento por organização: `organization_id` em usuários, sensores e importações.
 - Dados pessoais dos usuários limitados a nome, e-mail, último acesso e IP na auditoria. As imagens do vinhedo têm os metadados EXIF (inclusive GPS) removidos antes de serem gravadas.
 - Em produção: usuário de banco com privilégios mínimos para a API, backups diários, TLS entre API e banco e portas do banco expostas apenas na rede interna.
